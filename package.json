@@ -1,5 +1,5 @@
 {
-  "name": "trss_parser",
+  "name": "trss-parser",
   "version": "1.0.0",
   "description": "Parser for https://trss.adoptopenjdk.net to help with triaging",
   "main": "bin/citgm",
