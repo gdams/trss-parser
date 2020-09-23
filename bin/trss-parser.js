@@ -25,33 +25,45 @@ request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: 
 
     const buildNameRegex = "^Test_openjdk.*";
 
-    request(`https://trss.adoptopenjdk.net/api/getAllChildBuilds?parentId=${PARENT_ID}&buildNameRegex=${buildNameRegex}`, { json: true }, (err, res, body) => {
-        if (err) { return console.log(err); }
-        for (let testGroup of body) {
-            if (testGroup.buildResult !== "SUCCESS") {
-                let TEST_GROUP_NAME = testGroup.buildName
-                let TEST_GROUP_URL = testGroup.buildUrl
-                MARKDOWN_TEMPLATE += `\n[**${TEST_GROUP_NAME}**](${TEST_GROUP_URL}) \n`
-                for (let test of testGroup.tests) {
-                    if (test.testResult === "FAILED") {
-                        let TEST_NAME = test.testName
-                        let TEST_ID = test._id
-                        let historyLink = syncRequest('GET', `https://trss.adoptopenjdk.net/api/getHistoryPerTest?testId=${TEST_ID}&limit=100`)
-                        var history = JSON.parse(historyLink.getBody('utf8'));
-                        let TOTAL_RUNS = 0
-                        let TOTAL_PASSES = 0
-                        for (let testRun of history) {
-                            TOTAL_RUNS += 1
-                            if (testRun.tests.testResult === "PASSED") {
-                                TOTAL_PASSES += 1
+    request(`https://trss.adoptopenjdk.net/api/getBuildHistory?parentId=${PARENT_ID}`, { json: true }, (err, res, body) => {
+    if (err) { return console.log(err); }
+
+        for (let build of body) {
+            if (build.buildResult != "SUCCESS") {
+                MARKDOWN_TEMPLATE += `### ⚠️  [${build.buildName}](${build.buildUrl}) has a build result of ${build.buildResult} ⚠️\n`
+            }
+        }
+        
+        request(`https://trss.adoptopenjdk.net/api/getAllChildBuilds?parentId=${PARENT_ID}&buildNameRegex=${buildNameRegex}`, { json: true }, (err, res, body) => {
+            if (err) { return console.log(err); }
+            for (let testGroup of body) {
+                if (testGroup.buildResult !== "SUCCESS") {
+                    let TEST_GROUP_NAME = testGroup.buildName
+                    let TEST_GROUP_URL = testGroup.buildUrl
+                    MARKDOWN_TEMPLATE += `\n[**${TEST_GROUP_NAME}**](${TEST_GROUP_URL}) \n`
+                    if (testGroup.tests) {
+                        for (let test of testGroup.tests) {
+                            if (test.testResult === "FAILED") {
+                                let TEST_NAME = test.testName
+                                let TEST_ID = test._id
+                                let historyLink = syncRequest('GET', `https://trss.adoptopenjdk.net/api/getHistoryPerTest?testId=${TEST_ID}&limit=100`)
+                                var history = JSON.parse(historyLink.getBody('utf8'));
+                                let TOTAL_RUNS = 0
+                                let TOTAL_PASSES = 0
+                                for (let testRun of history) {
+                                    TOTAL_RUNS += 1
+                                    if (testRun.tests.testResult === "PASSED") {
+                                        TOTAL_PASSES += 1
+                                    }
+                                }
+                                MARKDOWN_TEMPLATE += `${TEST_NAME} => [deep history ${TOTAL_PASSES}/${TOTAL_RUNS} passed](https://trss.adoptopenjdk.net/deepHistory?testId=${TEST_ID}) \n`
                             }
                         }
-                        MARKDOWN_TEMPLATE += `${TEST_NAME} => [deep history ${TOTAL_PASSES}/${TOTAL_RUNS} passed](https://trss.adoptopenjdk.net/deepHistory?testId=${TEST_ID}) \n`
                     }
                 }
-            }
-        }   
-        console.log(MARKDOWN_TEMPLATE)
+            }   
+            console.log(MARKDOWN_TEMPLATE)
+        });
     });
 });
 
