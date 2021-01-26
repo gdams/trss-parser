@@ -59,7 +59,9 @@ request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: 
                                 MARKDOWN_TEMPLATE += `${TEST_NAME} => [deep history ${TOTAL_PASSES}/${TOTAL_RUNS} passed](https://trss.adoptopenjdk.net/deepHistory?testId=${TEST_ID}) \n`
                             }
                         }
-                    }
+                    } else {
+                        MARKDOWN_TEMPLATE += `⚠️ Test Job Failed ⚠️\n`
+                    } 
                 }
             }   
             console.log(MARKDOWN_TEMPLATE)
