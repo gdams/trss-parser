@@ -1,6 +1,6 @@
 {
   "name": "trss-parser",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Parser for https://trss.adoptium.net to help with triaging",
   "main": "bin/trss-parser",
   "preferGlobal": true,
