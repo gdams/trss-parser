@@ -1,7 +1,7 @@
 {
   "name": "trss-parser",
   "version": "1.0.4",
-  "description": "Parser for https://trss.adoptopenjdk.net to help with triaging",
+  "description": "Parser for https://trss.adoptium.net to help with triaging",
   "main": "bin/trss-parser",
   "preferGlobal": true,
   "bin": {

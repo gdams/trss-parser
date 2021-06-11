@@ -3,6 +3,7 @@
 
 const request = require('request');
 const syncRequest = require('sync-request');
+const trssServer = 'https://trss.adoptium.net/'
 
 let PARENT_ID
 let BUILD_URL
@@ -16,16 +17,16 @@ if (! process.argv[2]) {
     PARENT_ID = process.argv[2];
 }
 
-request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: true }, (err, res, body) => {
+request(`${trssServer}api/getParents?id=${PARENT_ID}`, { json: true }, (err, res, body) => {
     if (err) { return console.log(err); }
-    MARKDOWN_TEMPLATE = `TRSS [link](https://trss.adoptopenjdk.net/buildDetail?parentId=${PARENT_ID}&testSummaryResult=failed&buildNameRegex=%5ETest) \n`
+    MARKDOWN_TEMPLATE = `TRSS [link](${trssServer}buildDetail?parentId=${PARENT_ID}&testSummaryResult=failed&buildNameRegex=%5ETest) \n`
     BUILD_URL = body[0].buildUrl
     STARTED_BY = body[0].startBy
     MARKDOWN_TEMPLATE += `Build URL ${BUILD_URL} \nStarted by ${STARTED_BY} \n`
 
     const buildNameRegex = "^Test_openjdk.*";
 
-    request(`https://trss.adoptopenjdk.net/api/getBuildHistory?parentId=${PARENT_ID}`, { json: true }, (err, res, body) => {
+    request(`${trssServer}api/getBuildHistory?parentId=${PARENT_ID}`, { json: true }, (err, res, body) => {
     if (err) { return console.log(err); }
 
         for (let build of body) {
@@ -34,7 +35,7 @@ request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: 
             }
         }
         
-        request(`https://trss.adoptopenjdk.net/api/getAllChildBuilds?parentId=${PARENT_ID}&buildNameRegex=${buildNameRegex}`, { json: true }, (err, res, body) => {
+        request(`${trssServer}api/getAllChildBuilds?parentId=${PARENT_ID}&buildNameRegex=${buildNameRegex}`, { json: true }, (err, res, body) => {
             if (err) { return console.log(err); }
             for (let testGroup of body) {
                 if (testGroup.buildResult !== "SUCCESS") {
@@ -46,7 +47,7 @@ request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: 
                             if (test.testResult === "FAILED") {
                                 let TEST_NAME = test.testName
                                 let TEST_ID = test._id
-                                let historyLink = syncRequest('GET', `https://trss.adoptopenjdk.net/api/getHistoryPerTest?testId=${TEST_ID}&limit=100`)
+                                let historyLink = syncRequest('GET', `${trssServer}api/getHistoryPerTest?testId=${TEST_ID}&limit=100`)
                                 var history = JSON.parse(historyLink.getBody('utf8'));
                                 let TOTAL_RUNS = 0
                                 let TOTAL_PASSES = 0
@@ -56,7 +57,7 @@ request(`https://trss.adoptopenjdk.net/api/getParents?id=${PARENT_ID}`, { json: 
                                         TOTAL_PASSES += 1
                                     }
                                 }
-                                MARKDOWN_TEMPLATE += `${TEST_NAME} => [deep history ${TOTAL_PASSES}/${TOTAL_RUNS} passed](https://trss.adoptopenjdk.net/deepHistory?testId=${TEST_ID}) \n`
+                                MARKDOWN_TEMPLATE += `${TEST_NAME} => [deep history ${TOTAL_PASSES}/${TOTAL_RUNS} passed](${trssServer}deepHistory?testId=${TEST_ID}) \n`
                             }
                         }
                     } else {
